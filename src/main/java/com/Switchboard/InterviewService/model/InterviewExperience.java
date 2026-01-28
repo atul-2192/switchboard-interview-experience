@@ -24,10 +24,10 @@ public class InterviewExperience {
     private UUID id;
 
     @Column(nullable = false, length = 100)
-    private String userName;   // storing user’s name directly
+    private String userName;
 
     @Column(nullable = false, length = 150)
-    private String userEmail;  // storing user’s email directly
+    private String userEmail;
 
     @Column(nullable = false, length = 200)
     private String title;

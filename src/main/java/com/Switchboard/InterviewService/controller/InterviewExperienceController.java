@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/interview")
 @RequiredArgsConstructor
 @Tag(name = "Interview Experience", description = "APIs for managing interview experiences")
 public class InterviewExperienceController {
@@ -36,20 +36,14 @@ public class InterviewExperienceController {
     private final InterviewExperienceService interviewService;
     private final FileService fileService;
 
-    // Create
+
     @Operation(summary = "Create a new interview experience", description = "Creates a new interview experience with optional image upload")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully created interview experience",
-                    content = @Content(schema = @Schema(implementation = InterviewExperienceResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input or image format", content = @Content)
-    })
-    @PostMapping(value = "/interviews", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<InterviewExperienceResponse> createInterviewExperience(
             @Valid @ModelAttribute InterviewExperienceRequest request,@RequestHeader("X-User-Email") String userEmailHeader) throws IOException {
         log.info("InterviewExperienceController :: createInterviewExperience :: starting request processing");
 
         try {
-            // Handle image upload if provided
             String imageUrl = null;
             if (request.getImage() != null && !request.getImage().isEmpty()) {
                 log.info("InterviewExperienceController :: createInterviewExperience :: processing image: {} of type: {}",
@@ -77,13 +71,8 @@ public class InterviewExperienceController {
         return ResponseEntity.badRequest().body("Error processing multipart request: Please ensure the request is properly formatted");
     }
 
-    // Search by email
     @Operation(summary = "Search interviews by email", description = "Retrieves all interview experiences for a specific user email")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved interviews",
-                    content = @Content(schema = @Schema(implementation = InterviewExperienceResponse.class)))
-    })
-    @GetMapping("/search/email")
+    @GetMapping("/email")
     public ResponseEntity<List<InterviewExperienceResponse>> searchByEmail(
             @Parameter(description = "User email to search for", required = true)
             @RequestParam String email) {
@@ -93,13 +82,8 @@ public class InterviewExperienceController {
         return ResponseEntity.ok(response);
     }
 
-    // Search by email header
     @Operation(summary = "Search interviews by email header", description = "Retrieves all interview experiences for a specific user email received from header")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved interviews",
-                    content = @Content(schema = @Schema(implementation = InterviewExperienceResponse.class)))
-    })
-    @GetMapping("/search")
+    @GetMapping("/user")
     public ResponseEntity<List<InterviewExperienceResponse>> searchByEmailHeader(
             @Parameter(description = "User email to search for", required = true)
             @RequestHeader("X-User-Email") String userEmailHeader) {
@@ -109,13 +93,9 @@ public class InterviewExperienceController {
         return ResponseEntity.ok(response);
     }
 
-    // Search by company
+
     @Operation(summary = "Search interviews by company", description = "Retrieves all interview experiences for a specific company")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved interviews",
-                    content = @Content(schema = @Schema(implementation = InterviewExperienceResponse.class)))
-    })
-    @GetMapping("/search/company")
+    @GetMapping("/company")
     public ResponseEntity<List<InterviewExperienceResponse>> searchByCompany(
             @Parameter(description = "Company name to search for", required = true)
             @RequestParam String company) {
@@ -125,13 +105,8 @@ public class InterviewExperienceController {
         return ResponseEntity.ok(interviewService.searchByCompany(company));
     }
 
-    // Get all interviews
     @Operation(summary = "Get all interviews", description = "Retrieves all interview experiences with pagination and sorting")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved interviews",
-                    content = @Content(schema = @Schema(implementation = PageResponseDTO.class)))
-    })
-    @GetMapping("/getAll/interviews")
+    @GetMapping("/")
     public ResponseEntity<PageResponseDTO> getAllInterviews(
             @Parameter(description = "Page number (0-indexed)")
             @RequestParam(value = "pageNumber" , defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
@@ -148,14 +123,8 @@ public class InterviewExperienceController {
         return ResponseEntity.ok(response);
     }
 
-    // Get an interview by ID
     @Operation(summary = "Get interview by ID", description = "Retrieves a specific interview experience by its UUID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved interview",
-                    content = @Content(schema = @Schema(implementation = InterviewExperienceResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Interview not found", content = @Content)
-    })
-    @GetMapping("get/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<InterviewExperienceResponse> getInterviewById(
             @Parameter(description = "Interview UUID", required = true)
             @PathVariable UUID id) {
@@ -165,14 +134,8 @@ public class InterviewExperienceController {
         return ResponseEntity.ok(response);
     }
 
-    // Update an interview
     @Operation(summary = "Update an interview experience", description = "Updates an existing interview experience with optional new image")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully updated interview",
-                    content = @Content(schema = @Schema(implementation = InterviewExperienceResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Interview not found", content = @Content)
-    })
-    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<InterviewExperienceResponse> updateInterviewExperience(
             @Parameter(description = "Interview UUID", required = true)
             @PathVariable UUID id,
@@ -190,13 +153,8 @@ public class InterviewExperienceController {
         }
     }
 
-    // Delete an interview
     @Operation(summary = "Delete an interview experience", description = "Deletes an interview experience and its associated image from S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully deleted interview"),
-            @ApiResponse(responseCode = "404", description = "Interview not found", content = @Content)
-    })
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteInterviewExperience(
             @Parameter(description = "Interview UUID", required = true)
             @PathVariable UUID id) {
