@@ -206,7 +206,7 @@ class InterviewExperienceControllerTest {
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(expectedList, result.getBody());
         assertEquals(1, result.getBody().size());
-        verify(interviewService, times(2)).searchByCompany(company);  // Called twice in controller
+        verify(interviewService, times(1)).searchByCompany(company);
     }
 
     @Test

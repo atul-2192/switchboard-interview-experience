@@ -31,7 +31,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public String uploadImage(String path, MultipartFile file) throws IOException {
-        log.info("FileServiceImpl :: uploadImage :: uploading image: {}", file.getOriginalFilename());
+        log.info("FileServiceImpl :: uploadImage :: Starting for file: {}", file.getOriginalFilename());
 
         // Random file name for uniqueness
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
@@ -44,13 +44,12 @@ public class FileServiceImpl implements FileService {
                 .contentType(file.getContentType())
                 .build();
 
-        log.info("FileServiceImpl :: uploadImage :: uploading to S3 with key: {}", key);
         s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
 
         // Generate permanent public URL
         String publicUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
 
-        log.info("FileServiceImpl :: uploadImage :: completed. Public URL: {}", publicUrl);
+        log.info("FileServiceImpl :: uploadImage :: Completed successfully");
         return publicUrl;
     }
 
@@ -62,12 +61,12 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public void deleteImage(String fileUrl) {
-        log.info("FileServiceImpl :: deleteImage :: deleting image: {}", fileUrl);
+        log.info("FileServiceImpl :: deleteImage :: Starting for URL: {}", fileUrl);
 
         // Extract key from URL
         String key = fileUrl.substring(fileUrl.indexOf(".com/") + 5);
 
         s3Client.deleteObject(builder -> builder.bucket(bucket).key(key));
-        log.info("FileServiceImpl :: deleteImage :: deleted image from S3: {}", key);
+        log.info("FileServiceImpl :: deleteImage :: Completed successfully");
     }
 }

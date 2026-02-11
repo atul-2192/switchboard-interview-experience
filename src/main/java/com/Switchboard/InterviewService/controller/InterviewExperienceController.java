@@ -41,19 +41,13 @@ public class InterviewExperienceController {
     @PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<InterviewExperienceResponse> createInterviewExperience(
             @Valid @ModelAttribute InterviewExperienceRequest request,@RequestHeader("X-User-Email") String userEmailHeader) throws IOException {
-        log.info("InterviewExperienceController :: createInterviewExperience :: starting request processing");
-
         try {
             String imageUrl = null;
             if (request.getImage() != null && !request.getImage().isEmpty()) {
-                log.info("InterviewExperienceController :: createInterviewExperience :: processing image: {} of type: {}",
-                        request.getImage().getOriginalFilename(), request.getImage().getContentType());
-
                 imageUrl = fileService.uploadImage(AppConstants.PATH_VARIABLE, request.getImage());
             }
             request.setUserEmail(userEmailHeader);
             InterviewExperienceResponse response = interviewService.createInterviewExperience(request, imageUrl);
-            log.info("InterviewExperienceController :: createInterviewExperience :: completed successfully");
             return ResponseEntity.ok(response);
 
         } catch (MultipartException e) {
@@ -76,9 +70,7 @@ public class InterviewExperienceController {
     public ResponseEntity<List<InterviewExperienceResponse>> searchByEmail(
             @Parameter(description = "User email to search for", required = true)
             @RequestParam String email) {
-        log.info("InterviewExperienceController :: searchByEmail :: searching :: interviews for email: {}", email);
         List<InterviewExperienceResponse> response = interviewService.searchByEmail(email);
-        log.info("InterviewExperienceController :: searchByEmail :: found :: {} interviews", response.size());
         return ResponseEntity.ok(response);
     }
 
@@ -87,9 +79,7 @@ public class InterviewExperienceController {
     public ResponseEntity<List<InterviewExperienceResponse>> searchByEmailHeader(
             @Parameter(description = "User email to search for", required = true)
             @RequestHeader("X-User-Email") String userEmailHeader) {
-        log.info("InterviewExperienceController :: searchByEmail :: searching :: interviews for email: {}", userEmailHeader);
         List<InterviewExperienceResponse> response = interviewService.searchByEmail(userEmailHeader);
-        log.info("InterviewExperienceController :: searchByEmail :: found :: {} interviews", response.size());
         return ResponseEntity.ok(response);
     }
 
@@ -99,9 +89,6 @@ public class InterviewExperienceController {
     public ResponseEntity<List<InterviewExperienceResponse>> searchByCompany(
             @Parameter(description = "Company name to search for", required = true)
             @RequestParam String company) {
-        log.info("InterviewExperienceController :: searchByCompany :: searching :: interviews for company: {}", company);
-        List<InterviewExperienceResponse> response = interviewService.searchByCompany(company);
-        log.info("InterviewExperienceController :: searchByCompany :: found :: {} interviews", response.size());
         return ResponseEntity.ok(interviewService.searchByCompany(company));
     }
 
@@ -117,9 +104,7 @@ public class InterviewExperienceController {
             @Parameter(description = "Sort direction (asc/desc)")
             @RequestParam(value = "sortDir", defaultValue = AppConstants.SORT_DIR, required = false) String sortDir
     ) {
-        log.info("InterviewExperienceController :: getAllInterviews :: fetching :: all interviews");
         PageResponseDTO response = interviewService.getAllInterviews(pageNumber, pageSize, sortBy, sortDir);
-        log.info("InterviewExperienceController :: getAllInterviews :: fetched :: {} interviews", response.getContent().size());
         return ResponseEntity.ok(response);
     }
 
@@ -128,9 +113,7 @@ public class InterviewExperienceController {
     public ResponseEntity<InterviewExperienceResponse> getInterviewById(
             @Parameter(description = "Interview UUID", required = true)
             @PathVariable UUID id) {
-        log.info("InterviewExperienceController :: getInterviewById :: fetching :: interview with id: {}", id);
         InterviewExperienceResponse response = interviewService.getInterviewById(id);
-        log.info("InterviewExperienceController :: getInterviewById :: fetched :: interview with id: {}", id);
         return ResponseEntity.ok(response);
     }
 
@@ -140,12 +123,9 @@ public class InterviewExperienceController {
             @Parameter(description = "Interview UUID", required = true)
             @PathVariable UUID id,
             @Valid @ModelAttribute InterviewExperienceRequest request) throws IOException {
-        log.info("InterviewExperienceController :: updateInterviewExperience :: updating :: interview experience with id: {}", id);
-
         try {
             InterviewExperienceResponse response = interviewService.updateInterviewExperience(
                     id, request, request.getImage());
-            log.info("InterviewExperienceController :: updateInterviewExperience :: updated :: interview experience with id: {}", id);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("InterviewExperienceController :: updateInterviewExperience :: error :: {}", e.getMessage());
@@ -158,9 +138,7 @@ public class InterviewExperienceController {
     public ResponseEntity<String> deleteInterviewExperience(
             @Parameter(description = "Interview UUID", required = true)
             @PathVariable UUID id) {
-        log.info("InterviewExperienceController :: deleteInterviewExperience :: deleting :: interview experience with id: {}", id);
         interviewService.deleteInterviewExperience(id);
-        log.info("InterviewExperienceController :: deleteInterviewExperience :: deleted :: interview experience with id: {}", id);
         return ResponseEntity.ok("Interview experience deleted successfully, image removed from S3");
     }
 }

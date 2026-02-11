@@ -36,7 +36,7 @@ public class InterviewExperienceServiceImpl implements InterviewExperienceServic
 
     @Override
     public InterviewExperienceResponse createInterviewExperience(InterviewExperienceRequest request, String imageUrl) {
-        log.info("InterviewExperienceServiceImpl :: createInterviewExperience :: mapping :: request to entity");
+        log.info("InterviewExperienceServiceImpl :: createInterviewExperience :: Starting");
         InterviewExperience experience = modelMapper.map(request, InterviewExperience.class);
         
         // Set image URL if provided
@@ -44,35 +44,31 @@ public class InterviewExperienceServiceImpl implements InterviewExperienceServic
             experience.setImageName(imageUrl);
         }
 
-        log.info("InterviewExperienceServiceImpl :: createInterviewExperience :: saving :: interview experience");
         InterviewExperience newExperience = repository.save(experience);
 
-        log.info("InterviewExperienceServiceImpl :: createInterviewExperience :: mapping :: entity to response");
+        log.info("InterviewExperienceServiceImpl :: createInterviewExperience :: Completed successfully");
         return modelMapper.map(newExperience, InterviewExperienceResponse.class);
 
     }
 
     @Override
     public List<InterviewExperienceResponse> searchByEmail(String userEmail) {
-        log.info("InterviewExperienceServiceImpl :: searchByEmail :: searching :: experiences for email: {}", userEmail);
+        log.info("InterviewExperienceServiceImpl :: searchByEmail :: Starting for email: {}", userEmail);
         List<InterviewExperience> experiences = repository.findByUserEmailOrderByCreatedAtDesc(userEmail);
 
-        log.info("InterviewExperienceServiceImpl :: searchByEmail :: found :: {} experiences", experiences.size());
+        log.info("InterviewExperienceServiceImpl :: searchByEmail :: Completed successfully - found {} experiences", experiences.size());
         return experiences.stream()
-                .map(experience -> {
-                    log.debug("InterviewExperienceServiceImpl :: searchByEmail :: mapping :: experience to response");
-                    return modelMapper.map(experience, InterviewExperienceResponse.class);
-                })
+                .map(experience -> modelMapper.map(experience, InterviewExperienceResponse.class))
                 .collect(Collectors.toList());
     }
 
 
     @Override
     public List<InterviewExperienceResponse> searchByCompany(String companyTag) {
-        log.info("InterviewExperienceServiceImpl :: searchByCompany :: searching :: experiences for company: {}", companyTag);
+        log.info("InterviewExperienceServiceImpl :: searchByCompany :: Starting for company: {}", companyTag);
         List<InterviewExperience> experiences = repository.findByCompanyTagOrderByCreatedAtDesc(companyTag);
 
-        log.info("InterviewExperienceServiceImpl :: searchByCompany :: found :: {} experiences", experiences.size());
+        log.info("InterviewExperienceServiceImpl :: searchByCompany :: Completed successfully - found {} experiences", experiences.size());
         return experiences.stream()
                 .map(experience -> modelMapper.map(experience, InterviewExperienceResponse.class))
                 .collect(Collectors.toList());
@@ -81,18 +77,18 @@ public class InterviewExperienceServiceImpl implements InterviewExperienceServic
 
     @Override
     public PageResponseDTO getAllInterviews(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
-        log.info("InterviewExperienceServiceImpl :: getAllInterviews :: fetching :: page {} with size {}", pageNumber, pageSize);
+        log.info("InterviewExperienceServiceImpl :: getAllInterviews :: Starting - page {} with size {}", pageNumber, pageSize);
         Sort sort = (sortDir.equalsIgnoreCase("asc")) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable p = PageRequest.of(pageNumber, pageSize, sort);
 
         Page<InterviewExperience> experiences = repository.findAll(p);
         List<InterviewExperience> experienceList = experiences.getContent();
-        log.info("InterviewExperienceServiceImpl :: getAllInterviews :: found :: {} experiences", experienceList.size());
 
         List<InterviewExperienceResponse> res = experienceList.stream()
                 .map(experience -> modelMapper.map(experience, InterviewExperienceResponse.class))
                 .collect(Collectors.toList());
 
+        log.info("InterviewExperienceServiceImpl :: getAllInterviews :: Completed successfully - found {} experiences", experienceList.size());
         return PageResponseDTO.builder()
                 .content(res)
                 .pageNumber(experiences.getNumber())
@@ -105,55 +101,52 @@ public class InterviewExperienceServiceImpl implements InterviewExperienceServic
 
     @Override
     public InterviewExperienceResponse getInterviewById(UUID id) {
-        log.info("InterviewExperienceServiceImpl :: getInterviewById :: fetching :: experience with id: {}", id);
+        log.info("InterviewExperienceServiceImpl :: getInterviewById :: Starting for id: {}", id);
         InterviewExperience experience = repository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("InterviewExperienceServiceImpl :: getInterviewById :: not found :: experience with id: {}", id);
+                    log.error("InterviewExperienceServiceImpl :: getInterviewById :: Interview Experience not found with id: {}", id);
                     return new RuntimeException("Interview Experience not found");
                 });
 
-        log.info("InterviewExperienceServiceImpl :: getInterviewById :: mapping :: experience to response");
+        log.info("InterviewExperienceServiceImpl :: getInterviewById :: Completed successfully");
         return modelMapper.map(experience, InterviewExperienceResponse.class);
     }
 
 
     @Override
     public void deleteInterviewExperience(UUID id) {
-        log.info("InterviewExperienceServiceImpl :: deleteInterviewExperience :: deleting :: experience with id: {}", id);
+        log.info("InterviewExperienceServiceImpl :: deleteInterviewExperience :: Starting for id: {}", id);
 
         // Fetch existing record
         InterviewExperience experience = repository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("InterviewExperienceServiceImpl :: deleteInterviewExperience :: not found :: experience with id: {}", id);
+                    log.error("InterviewExperienceServiceImpl :: deleteInterviewExperience :: Interview Experience not found with id: {}", id);
                     return new RuntimeException("Interview Experience not found");
                 });
-        //log.info("Deleting experience: {}, imageName: {}", experience.getId(), experience.getImageName());
 
         // Delete image from S3 if exists
         if (experience.getImageName() != null && !experience.getImageName().isEmpty()) {
             try {
-                log.info("InterviewExperienceServiceImpl :: deleting image from S3: {}", experience.getImageName());
                 fileService.deleteImage(experience.getImageName());
-                log.info("InterviewExperienceServiceImpl :: deleted image from S3: {}", experience.getImageName());
             } catch (Exception e) {
-                log.error("InterviewExperienceServiceImpl :: failed to delete image from S3: {}", e.getMessage());
+                log.error("InterviewExperienceServiceImpl :: deleteInterviewExperience :: Failed to delete image from S3: {}", e.getMessage());
                 // Optional: you can throw exception if you want to fail delete if image deletion fails
             }
         }
 
         // Delete DB record
         repository.delete(experience);
-        log.info("InterviewExperienceServiceImpl :: deleteInterviewExperience :: deleted DB record with id: {}", id);
+        log.info("InterviewExperienceServiceImpl :: deleteInterviewExperience :: Completed successfully");
     }
 
     @Override
     public InterviewExperienceResponse updateInterviewExperience(UUID id, InterviewExperienceRequest request, MultipartFile newImage) throws IOException {
-        log.info("InterviewExperienceServiceImpl :: updateInterviewExperience :: updating :: experience with id: {}", id);
+        log.info("InterviewExperienceServiceImpl :: updateInterviewExperience :: Starting for id: {}", id);
 
         // Fetch existing record
         InterviewExperience experience = repository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("InterviewExperienceServiceImpl :: updateInterviewExperience :: not found :: experience with id: {}", id);
+                    log.error("InterviewExperienceServiceImpl :: updateInterviewExperience :: Interview Experience not found with id: {}", id);
                     return new RuntimeException("Interview Experience not found");
                 });
 
@@ -161,13 +154,11 @@ public class InterviewExperienceServiceImpl implements InterviewExperienceServic
         if (newImage != null && !newImage.isEmpty()) {
             // Delete old image from S3 if exists
             if (experience.getImageName() != null && !experience.getImageName().isEmpty()) {
-                log.info("InterviewExperienceServiceImpl :: deleting old image from S3: {}", experience.getImageName());
                 fileService.deleteImage(experience.getImageName());
             }
 
             // Upload new image
             String newImageUrl = fileService.uploadImage(AppConstants.PATH_VARIABLE, newImage);
-            log.info( "InterviewExperienceServiceImpl :: uploaded new image to S3: {}", newImageUrl);
             experience.setImageName(newImageUrl);
         }
 
@@ -177,13 +168,11 @@ public class InterviewExperienceServiceImpl implements InterviewExperienceServic
         experience.setCompanyTag(request.getCompanyTag());
         experience.setUserEmail(request.getUserEmail());
         experience.setContent(request.getContent());
-        log.info("InterviewExperienceServiceImpl :: updateInterviewExperience :: updated fields from request {}" ,experience);
 
         // Save updated entity
         InterviewExperience updatedExperience = repository.save(experience);
 
-        log.info("InterviewExperienceServiceImpl :: updateInterviewExperience :: saved :: updated experience");
-
+        log.info("InterviewExperienceServiceImpl :: updateInterviewExperience :: Completed successfully");
         return modelMapper.map(updatedExperience, InterviewExperienceResponse.class);
     }
 
